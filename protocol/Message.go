@@ -17,7 +17,6 @@
 package protocol
 
 import (
-	"errors"
 	"fmt"
 
 	pbe "github.com/Q1mi/canal-go/protocol/entry"
@@ -27,7 +26,7 @@ import (
 
 type Message struct {
 	Id         int64
-	Entries    []pbe.Entry
+	Entries    []*pbe.Entry
 	Raw        bool
 	RawEntries interface{}
 }
@@ -43,19 +42,16 @@ func Decode(data []byte, lazyParseEntry bool) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	messages := new(pbp.Messages)
-	message := new(Message)
 
-	length := len(messages.Messages)
-	message.Entries = make([]pbe.Entry, length)
-	ack := new(pbp.Ack)
-	var items []pbe.Entry
-	var entry pbe.Entry
+	message := new(Message)
 	switch p.Type {
 	case pbp.PacketType_MESSAGES:
-		if !(p.GetCompression() == pbp.Compression_NONE) && !(p.GetCompression() == pbp.Compression_COMPRESSIONCOMPATIBLEPROTO2) { // NONE和兼容pb2的处理方式相同
+		if !(p.GetCompression() == pbp.Compression_NONE) &&
+			!(p.GetCompression() == pbp.Compression_COMPRESSIONCOMPATIBLEPROTO2) { // NONE和兼容pb2的处理方式相同
 			panic("compression is not supported in this connector")
 		}
+		messages := new(pbp.Messages)
+		items := make([]*pbe.Entry, 0, len(messages.Messages))
 		err := proto.Unmarshal(p.Body, messages)
 		if err != nil {
 			return nil, err
@@ -64,9 +60,9 @@ func Decode(data []byte, lazyParseEntry bool) (*Message, error) {
 			message.RawEntries = messages.Messages
 			message.Raw = true
 		} else {
-
 			for _, value := range messages.Messages {
-				err := proto.Unmarshal(value, &entry)
+				entry := new(pbe.Entry)
+				err := proto.Unmarshal(value, entry)
 				if err != nil {
 					return nil, err
 				}
@@ -78,12 +74,13 @@ func Decode(data []byte, lazyParseEntry bool) (*Message, error) {
 		return message, nil
 
 	case pbp.PacketType_ACK:
+		ack := new(pbp.Ack)
 		err := proto.Unmarshal(p.Body, ack)
 		if err != nil {
 			return nil, err
 		}
-		panic(errors.New(fmt.Sprintf("something goes wrong with reason:%s", ack.GetErrorMessage())))
+		panic(fmt.Errorf("something goes wrong with reason:%s", ack.GetErrorMessage()))
 	default:
-		panic(errors.New(fmt.Sprintf("unexpected packet type:%s", p.Type)))
+		panic(fmt.Errorf("unexpected packet type:%s", p.Type))
 	}
 }
