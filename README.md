@@ -19,7 +19,7 @@ import (
 	pbe "github.com/Q1mi/canal-go/protocol/entry"
 
 	"github.com/Q1mi/canal-go/client"
-	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // canal-go client demo
@@ -58,17 +58,17 @@ func main() {
 	}
 }
 
-func printEntry(entries []pbe.Entry) {
-	for i := range entries {
+func printEntry(entries []*pbe.Entry) {
+	for _, entry := range entries {
 		// 忽略事务开启和事务关闭类型
-		if entries[i].GetEntryType() == pbe.EntryType_TRANSACTIONBEGIN ||
-			entries[i].GetEntryType() == pbe.EntryType_TRANSACTIONEND {
+		if entry.GetEntryType() == pbe.EntryType_TRANSACTIONBEGIN ||
+			entry.GetEntryType() == pbe.EntryType_TRANSACTIONEND {
 			continue
 		}
 		// RowChange对象，包含了一行数据变化的所有特征
 		rowChange := new(pbe.RowChange)
 		// protobuf解析
-		err := protojson.Unmarshal(entries[i].GetStoreValue(), rowChange)
+		err := proto.Unmarshal(entry.GetStoreValue(), rowChange)
 		if err != nil {
 			fmt.Printf("proto.Unmarshal failed, err:%v\n", err)
 		}
@@ -76,7 +76,7 @@ func printEntry(entries []pbe.Entry) {
 			continue
 		}
 		// 获取并打印Header信息
-		header := entries[i].GetHeader()
+		header := entry.GetHeader()
 		fmt.Printf("binlog[%s : %d], name[%s,%s], eventType: %s\n",
 			header.GetLogfileName(),
 			header.GetLogfileOffset(),
@@ -108,7 +108,7 @@ func printEntry(entries []pbe.Entry) {
 
 func printColumn(columns []*pbe.Column) {
 	for _, col := range columns {
-		fmt.Printf("%s:%s  [updated]=%v\n", col.GetName(), col.GetValue(), col.GetUpdated())
+		fmt.Printf("%s:%s  updated=%v\n", col.GetName(), col.GetValue(), col.GetUpdated())
 	}
 }
 ```

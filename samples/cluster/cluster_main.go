@@ -73,10 +73,11 @@ func createConnection() *client.ClusterCanalConnector {
 	return canalConnector
 }
 
-func printEntry(entrys []pbe.Entry) {
+func printEntry(entrys []*pbe.Entry) {
 
 	for _, entry := range entrys {
-		if entry.GetEntryType() == pbe.EntryType_TRANSACTIONBEGIN || entry.GetEntryType() == pbe.EntryType_TRANSACTIONEND {
+		if entry.GetEntryType() == pbe.EntryType_TRANSACTIONBEGIN ||
+			entry.GetEntryType() == pbe.EntryType_TRANSACTIONEND {
 			continue
 		}
 		rowChange := new(pbe.RowChange)
@@ -86,7 +87,12 @@ func printEntry(entrys []pbe.Entry) {
 		if rowChange != nil {
 			eventType := rowChange.GetEventType()
 			header := entry.GetHeader()
-			fmt.Println(fmt.Sprintf("================> binlog[%s : %d],name[%s,%s], eventType: %s", header.GetLogfileName(), header.GetLogfileOffset(), header.GetSchemaName(), header.GetTableName(), header.GetEventType()))
+			fmt.Printf("binlog[%s : %d],name[%s,%s], eventType: %s",
+				header.GetLogfileName(),
+				header.GetLogfileOffset(),
+				header.GetSchemaName(),
+				header.GetTableName(),
+				header.GetEventType())
 
 			for _, rowData := range rowChange.GetRowDatas() {
 				if eventType == pbe.EventType_DELETE {
@@ -106,7 +112,7 @@ func printEntry(entrys []pbe.Entry) {
 
 func printColumn(columns []*pbe.Column) {
 	for _, col := range columns {
-		fmt.Println(fmt.Sprintf("%s : %s  update= %t", col.GetName(), col.GetValue(), col.GetUpdated()))
+		fmt.Printf("%s : %s  update= %t", col.GetName(), col.GetValue(), col.GetUpdated())
 	}
 }
 
