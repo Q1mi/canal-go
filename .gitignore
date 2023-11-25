@@ -14,9 +14,10 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
-.vscode
-.idea
+.vscode/
+.idea/
+tmp/
 
-vendor
+.DS_Store

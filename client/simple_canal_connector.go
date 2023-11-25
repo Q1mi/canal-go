@@ -21,15 +21,16 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	pb "github.com/withlin/canal-go/protocol"
 	"io"
 	"net"
 	"strconv"
 	"sync"
 
-	pbp "github.com/withlin/canal-go/protocol/packet"
+	pb "github.com/Q1mi/canal-go/protocol"
 
-	"github.com/golang/protobuf/proto"
+	pbp "github.com/Q1mi/canal-go/protocol/packet"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type SimpleCanalConnector struct {
